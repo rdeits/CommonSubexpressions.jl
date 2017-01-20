@@ -10,15 +10,10 @@ end
 
 Cache() = Cache(Dict{Symbol,Symbol}(), Set{Symbol}(), Vector{Expr}())
 
-function add_element!(cache::Cache, name)
-    cache.name_to_symbol[name] = name
-    name
-end
-
 function add_element!(cache::Cache, name, setup::Expr)
     sym = gensym(name)
     cache.name_to_symbol[name] = sym
-    push!(cache.setup, :($sym = $(copy(setup))))
+    push!(cache.setup, :($sym = $(setup)))
     sym
 end
 
