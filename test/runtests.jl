@@ -45,3 +45,18 @@ using CombinedSubexpressions
     @test g_count == 1
     @test h_count == 6
 end
+
+@testset "function definition" begin
+    f_count = 0
+    function f(x)
+        f_count += 1
+        1
+    end
+
+    @cse function foo(x)
+        [f(x) == i for i in 1:5]
+    end
+
+    @test foo(1) == [true, false, false, false, false]
+    @test f_count == 1
+end
