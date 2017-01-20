@@ -36,37 +36,45 @@ function cacheify!(cache::Cache, expr::Expr)
         for i in 2:length(expr.args)
             expr.args[i] = cacheify!(expr.args[i])
         end
-        return expr
     elseif expr.head == :line
-        return expr
+        # nothing
     elseif expr.head == :(=)
         disqualify!(cache, expr.args[1])
-    elseif expr.head == :call
-        if all(!isa(arg, Expr) && !(arg in cache.disqualified_symbols) for arg in expr.args)
-            cached_name = Symbol(expr.args...)
-            if !haskey(cache.name_to_symbol, cached_name)
-                sym = add_element!(cache, cached_name, expr)
-            else
-                sym = cache.name_to_symbol[cached_name]
-            end
-            return sym
+        for i in 2:length(expr.args)
+            expr.args[i] = cacheify!(cache, expr.args[i])
         end
-    end
-    for (i, child) in enumerate(expr.args)
-        expr.args[i] = cacheify!(cache, child)
+    elseif expr.head == :generator
+        for i in vcat(2:length(expr.args), 1)
+            expr.args[i] = cacheify!(cache, expr.args[i])
+        end
+    else
+        for (i, child) in enumerate(expr.args)
+            expr.args[i] = cacheify!(cache, child)
+        end
+        if expr.head == :call
+            for (i, child) in enumerate(expr.args)
+                expr.args[i] = cacheify!(cache, child)
+            end
+            if all(!isa(arg, Expr) && !(arg in cache.disqualified_symbols) for arg in expr.args)
+                cached_name = Symbol(expr.args...)
+                if !haskey(cache.name_to_symbol, cached_name)
+                    sym = add_element!(cache, cached_name, expr)
+                else
+                    sym = cache.name_to_symbol[cached_name]
+                end
+                return sym
+            else
+            end
+        end
     end
     return expr
 end
 
+cacheify!(x) = x
+
 function cacheify!(expr::Expr)
     cache = Cache()
-    while true
-        num_setup = length(cache.setup)
-        expr = cacheify!(cache, expr)
-        if length(cache.setup) == num_setup
-            break
-        end
-    end
+    expr = cacheify!(cache, expr)
     Expr(:block, cache.setup..., expr)
 end
 
