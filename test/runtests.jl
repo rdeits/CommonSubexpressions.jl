@@ -60,3 +60,14 @@ end
     @test foo(1) == [true, false, false, false, false]
     @test f_count == 1
 end
+
+@testset "algebra" begin
+    H = [1 2; 3 4]
+    W = [2 3; 4 5]
+    G = [4 5; 6 7]
+
+    @test (@cse inv(H) * G + W * (inv(H) + W)) == begin
+        invH = inv(H)
+        invH * G + W * (inv(H) + W)
+    end
+end

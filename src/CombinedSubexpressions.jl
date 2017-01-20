@@ -62,7 +62,7 @@ function cacheify!(expr::Expr)
     cache = Cache()
     while true
         num_setup = length(cache.setup)
-        cacheify!(cache, expr)
+        expr = cacheify!(cache, expr)
         if length(cache.setup) == num_setup
             break
         end
