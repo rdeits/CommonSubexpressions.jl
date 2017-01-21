@@ -71,3 +71,15 @@ end
         invH * G + W * (inv(H) + W)
     end
 end
+
+@testset "dict" begin
+    @test (@cse begin
+        x = Dict("foo" => sin(pi), "bar" => 2 + 2)
+        x["bar"] = 100
+        x["foo"], x["bar"]
+    end) == begin
+        x = Dict("foo" => sin(pi), "bar" => 2 + 2)
+        x["bar"] = 100
+        x["foo"], x["bar"]
+    end
+end

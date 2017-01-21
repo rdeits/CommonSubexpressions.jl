@@ -1,9 +1,11 @@
+__precompile__()
+
 module CombinedSubexpressions
 
 export @cse
 
 immutable Cache
-    name_to_symbol::Dict{Symbol, Symbol}
+    args_to_symbol::Dict{Symbol, Symbol}
     disqualified_symbols::Set{Symbol}
     setup::Vector{Expr}
 end
@@ -12,7 +14,7 @@ Cache() = Cache(Dict{Symbol,Symbol}(), Set{Symbol}(), Vector{Expr}())
 
 function add_element!(cache::Cache, name, setup::Expr)
     sym = gensym(name)
-    cache.name_to_symbol[name] = sym
+    cache.args_to_symbol[name] = sym
     push!(cache.setup, :($sym = $(setup)))
     sym
 end
@@ -22,40 +24,40 @@ disqualify!(cache::Cache, s::Symbol) = push!(cache.disqualified_symbols, s)
 disqualify!(cache::Cache, expr::Expr) = foreach(arg -> disqualify!(cache, arg), expr.args)
 
 # fallback for non-Expr arguments
-cacheify!(setup, expr) = expr
+combine_subexprs!(setup, expr) = expr
 
-function cacheify!(cache::Cache, expr::Expr)
+function combine_subexprs!(cache::Cache, expr::Expr)
     if expr.head == :function
         # We can't continue CSE through a function definition, but we can
         # start over inside the body of the function:
         for i in 2:length(expr.args)
-            expr.args[i] = cacheify!(expr.args[i])
+            expr.args[i] = combine_subexprs!(expr.args[i])
         end
     elseif expr.head == :line
         # nothing
     elseif expr.head == :(=)
         disqualify!(cache, expr.args[1])
         for i in 2:length(expr.args)
-            expr.args[i] = cacheify!(cache, expr.args[i])
+            expr.args[i] = combine_subexprs!(cache, expr.args[i])
         end
     elseif expr.head == :generator
         for i in vcat(2:length(expr.args), 1)
-            expr.args[i] = cacheify!(cache, expr.args[i])
+            expr.args[i] = combine_subexprs!(cache, expr.args[i])
         end
     else
         for (i, child) in enumerate(expr.args)
-            expr.args[i] = cacheify!(cache, child)
+            expr.args[i] = combine_subexprs!(cache, child)
         end
         if expr.head == :call
             for (i, child) in enumerate(expr.args)
-                expr.args[i] = cacheify!(cache, child)
+                expr.args[i] = combine_subexprs!(cache, child)
             end
             if all(!isa(arg, Expr) && !(arg in cache.disqualified_symbols) for arg in expr.args)
-                cached_name = Symbol(expr.args...)
-                if !haskey(cache.name_to_symbol, cached_name)
-                    sym = add_element!(cache, cached_name, expr)
+                combined_args = Symbol(expr.args...)
+                if !haskey(cache.args_to_symbol, combined_args)
+                    sym = add_element!(cache, combined_args, expr)
                 else
-                    sym = cache.name_to_symbol[cached_name]
+                    sym = cache.args_to_symbol[combined_args]
                 end
                 return sym
             else
@@ -65,17 +67,17 @@ function cacheify!(cache::Cache, expr::Expr)
     return expr
 end
 
-cacheify!(x) = x
+combine_subexprs!(x) = x
 
-function cacheify!(expr::Expr)
+function combine_subexprs!(expr::Expr)
     cache = Cache()
-    expr = cacheify!(cache, expr)
+    expr = combine_subexprs!(cache, expr)
     Expr(:block, cache.setup..., expr)
 end
 
 macro cse(expr)
-    result = cacheify!(expr)
-    println(result)
+    result = combine_subexprs!(expr)
+    # println(result)
     esc(result)
 end
 
