@@ -83,3 +83,7 @@ end
         x["foo"], x["bar"]
     end
 end
+
+@testset "int" begin
+    @test (@cse 1) == 1
+end
