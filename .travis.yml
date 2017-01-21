@@ -5,7 +5,6 @@ os:
   - linux
   - osx
 julia:
-  - 0.4
   - 0.5
   - nightly
 notifications:
@@ -13,9 +12,6 @@ notifications:
 branches:
   only:
     - master
-matrix:
-  allow_failures:
-    - julia: nightly
 
 after_success:
   - julia -e 'cd(Pkg.dir("CombinedSubexpressions")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
