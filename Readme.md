@@ -78,5 +78,6 @@ This package does not (currently) construct a full data-flow graph like [DataFlo
     1. If a function call is encountered and all the function arguments are either constants or symbols, and those symbols are not *disqualified*, then:
         1. Replace the function call in the current expression with a newly generated symbol
         1. Append to the *setup commands* an expression which performs the function call and assigns it to the new symbol
+1. Return the transformed expression, with all the *setup commands* prepended.
 
-This simple procedure ensures that we only cache functions whose inputs do not change within the given code block (assuming that all function calls are pure, as required above). 
+This simple procedure ensures that we only cache functions whose inputs do not change within the given code block (assuming that all function calls are pure, as required above).
