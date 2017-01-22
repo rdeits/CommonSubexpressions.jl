@@ -87,3 +87,36 @@ end
 @testset "int" begin
     @test (@cse 1) == 1
 end
+
+@testset "nested usage" begin
+    f_count = 0
+    function f(x)
+        f_count += 1
+        x
+    end
+
+    g_count = 0
+    function g(x)
+        g_count += 1
+        2x
+    end
+
+    @test f_count == 0
+    @test g_count == 0
+
+    result = @cse for i in 1:5
+        x = f(2)
+        @cse for j in 1:5
+            y = g(i)
+        end
+    end
+    @test f_count == 1
+    @test g_count == 5
+
+    @test result == for i in 1:5
+        x = f(2)
+        for j in 1:5
+            y = g(i)
+        end
+    end
+end
