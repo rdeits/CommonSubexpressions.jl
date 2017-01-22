@@ -66,3 +66,17 @@ end
 which increases a counter `f_counter` every time it is called.
 
 In addition, any function that mutates its input arguments can not be pure, since changing its input arguments constitutes a side effect.
+
+# How it Works
+
+This package does not (currently) construct a full data-flow graph like [DataFlow.jl](https://github.com/MikeInnes/DataFlow.jl). Instead, it performs a few relatively simple steps:
+
+1. Initialize the set of *disqualified symbols* to {}
+1. Initialize the list of *setup commands* to []
+1. Walk the expression tree, repeatedly performing these steps:
+    1. If an assignment operation (like `x = 5`) is encountered, then add the target of the assignment (`x` in this case) to the *disqualified symbols*.
+    1. If a function call is encountered and all the function arguments are either constants or symbols, and those symbols are not *disqualified*, then:
+        1. Replace the function call in the current expression with a newly generated symbol
+        1. Append to the *setup commands* an expression which performs the function call and assigns it to the new symbol
+
+This simple procedure ensures that we only cache functions whose inputs do not change within the given code block (assuming that all function calls are pure, as required above). 
