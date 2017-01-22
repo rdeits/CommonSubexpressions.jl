@@ -14,4 +14,4 @@ branches:
     - master
 
 after_success:
-  - julia -e 'cd(Pkg.dir("CombinedSubexpressions")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'cd(Pkg.dir("CommonSubexpressions")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'

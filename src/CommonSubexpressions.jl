@@ -1,6 +1,6 @@
 __precompile__()
 
-module CombinedSubexpressions
+module CommonSubexpressions
 
 export @cse
 

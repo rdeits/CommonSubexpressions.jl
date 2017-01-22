@@ -1,5 +1,5 @@
 using Base.Test
-using CombinedSubexpressions
+using CommonSubexpressions
 
 @testset "basic usage" begin
     f_count = 0
