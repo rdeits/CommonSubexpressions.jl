@@ -26,6 +26,17 @@ disqualify!(cache::Cache, expr::Expr) = foreach(arg -> disqualify!(cache, arg), 
 # fallback for non-Expr arguments
 combine_subexprs!(setup, expr) = expr
 
+const standard_expression_forms = Set{Symbol}(
+    (:call,
+     :block,
+     :comprehension,
+     :(=>),
+     :(:),
+     :tuple,
+     :for,
+     :ref,
+     :macrocall))
+
 function combine_subexprs!(cache::Cache, expr::Expr)
     if expr.head == :function
         # We can't continue CSE through a function definition, but we can
@@ -44,7 +55,7 @@ function combine_subexprs!(cache::Cache, expr::Expr)
         for i in vcat(2:length(expr.args), 1)
             expr.args[i] = combine_subexprs!(cache, expr.args[i])
         end
-    else
+    elseif expr.head in standard_expression_forms
         for (i, child) in enumerate(expr.args)
             expr.args[i] = combine_subexprs!(cache, child)
         end
@@ -63,6 +74,8 @@ function combine_subexprs!(cache::Cache, expr::Expr)
             else
             end
         end
+    else
+        warn("CommonSubexpressions can't yet handle expressions of this form: $(expr.head)")
     end
     return expr
 end
