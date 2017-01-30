@@ -12,10 +12,10 @@ end
 
 Cache() = Cache(Dict{Symbol,Symbol}(), Set{Symbol}(), Vector{Expr}())
 
-function add_element!(cache::Cache, name, setup::Expr)
-    sym = gensym(name)
+function add_element!(cache::Cache, name, expr::Expr)
+    sym = gensym(expr.args[1])
     cache.args_to_symbol[name] = sym
-    push!(cache.setup, :($sym = $(setup)))
+    push!(cache.setup, :($sym = $(expr)))
     sym
 end
 
