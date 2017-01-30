@@ -35,7 +35,8 @@ const standard_expression_forms = Set{Symbol}(
      :tuple,
      :for,
      :ref,
-     :macrocall))
+     :macrocall,
+     Symbol("'")))
 
 function combine_subexprs!(cache::Cache, expr::Expr)
     if expr.head == :function
