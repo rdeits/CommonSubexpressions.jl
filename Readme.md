@@ -67,6 +67,12 @@ which increases a counter `f_counter` every time it is called.
 
 In addition, any function that mutates its input arguments can not be pure, since changing its input arguments constitutes a side effect.
 
+# Visualization
+
+The CSE transformation can be visualized using the [TreeView.jl](https://github.com/dpsanders/treeview.jl) package. Here's a very simple example:
+
+![rendering of before and after as TreeView.jl trees](https://raw.githubusercontent.com/rdeits/CommonSubexpressions.jl/master/doc/img/tree_view_demo.png)
+
 # How it Works
 
 This package does not (currently) construct a full data-flow graph like [DataFlow.jl](https://github.com/MikeInnes/DataFlow.jl). Instead, it performs a few relatively simple steps:
