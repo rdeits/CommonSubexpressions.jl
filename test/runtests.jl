@@ -120,3 +120,15 @@ end
         end
     end
 end
+
+@testset "cse function" begin
+    expr = cse(:((x + 1) * (x + 1)))
+    @test expr.head == :block
+    @test length(expr.args) == 3
+    @test expr.args[1].head == :(=)
+    @test expr.args[2].head == :(=)
+    @test expr.args[1].args[2].head == :call
+    @test expr.args[1].args[2].args == [:(+), :x, 1]
+    @test expr.args[2].args[2].head == :call
+    @test expr.args[2].args[2].args[1] == :(*)
+end

@@ -2,7 +2,7 @@ __precompile__()
 
 module CommonSubexpressions
 
-export @cse
+export @cse, cse
 
 immutable Cache
     args_to_symbol::Dict{Symbol, Symbol}
@@ -94,5 +94,7 @@ macro cse(expr)
     # println(result)
     esc(result)
 end
+
+cse(expr) = combine_subexprs!(copy(expr))
 
 end
