@@ -32,11 +32,22 @@ const standard_expression_forms = Set{Symbol}(
      :comprehension,
      :(=>),
      :(:),
+     :(&),
+     :(&&),
+     :(|),
+     :(||),
      :tuple,
      :for,
      :ref,
      :macrocall,
      Symbol("'")))
+
+const assignment_expression_forms = Set{Symbol}(
+    (:(=),
+     :(+=),
+     :(-=),
+     :(*=),
+     :(/=)))
 
 function combine_subexprs!(cache::Cache, expr::Expr)
     if expr.head == :function
@@ -47,7 +58,7 @@ function combine_subexprs!(cache::Cache, expr::Expr)
         end
     elseif expr.head == :line
         # nothing
-    elseif expr.head == :(=)
+    elseif expr.head in assignment_expression_forms
         disqualify!(cache, expr.args[1])
         for i in 2:length(expr.args)
             expr.args[i] = combine_subexprs!(cache, expr.args[i])
