@@ -132,3 +132,14 @@ end
     @test expr.args[2].args[2].head == :call
     @test expr.args[2].args[2].args[1] == :(*)
 end
+
+@testset "inplace" begin
+
+    x = 1
+    @cse begin
+        y = 2 + x
+        x += y * x
+    end
+    @test y == 3
+    @test x == 4
+end
