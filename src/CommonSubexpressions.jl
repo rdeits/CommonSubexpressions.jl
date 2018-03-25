@@ -4,7 +4,7 @@ module CommonSubexpressions
 
 export @cse, cse
 
-immutable Cache
+struct Cache
     args_to_symbol::Dict{Symbol, Symbol}
     disqualified_symbols::Set{Symbol}
     setup::Vector{Expr}
