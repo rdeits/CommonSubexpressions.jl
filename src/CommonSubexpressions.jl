@@ -47,6 +47,11 @@ const assignment_expression_forms = Set{Symbol}(
      :(*=),
      :(/=)))
 
+const trinary_functions = Set{Symbol}(
+    (:(+),
+     :(*),
+     :(++),))
+
 function combine_subexprs!(cache::Cache, expr::Expr, warn_enabled::Bool)
     if expr.head == :function
         # We can't continue CSE through a function definition, but we can
@@ -70,6 +75,13 @@ function combine_subexprs!(cache::Cache, expr::Expr, warn_enabled::Bool)
             expr.args[i] = combine_subexprs!(cache, child, warn_enabled)
         end
         if expr.head == :call
+            if expr.args[1] in trinary_functions && length(expr.args) >= 4
+                inner = []
+                while length(expr.args) >= 3
+                    pushfirst!(inner, pop!(expr.args))
+                end
+                push!(expr.args, Expr(:call, expr.args[1], inner...))
+            end
             for (i, child) in enumerate(expr.args)
                 expr.args[i] = combine_subexprs!(cache, child, warn_enabled)
             end

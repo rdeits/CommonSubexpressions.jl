@@ -1,0 +1,13 @@
+name = "CommonSubexpressions"
+uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
+authors = ["Robin Deits"]
+version = "0.2.1"
+
+[compat]
+julia = "0.7, 1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

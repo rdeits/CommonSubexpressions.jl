@@ -143,3 +143,14 @@ end
     @test y == 3
     @test x == 4
 end
+
+@testset "trinary" begin
+    expr = cse(:(x*y*z))
+    @test expr.head == :block
+    @test expr.args[1].args[2] == :(y * z)
+    @test expr.args[2].args[2].args[2] == :x
+    @test expr.args[3] isa Symbol
+    x,y,z,t = 1,2,3,4
+    @test x*y*z*t == @cse x*y*z*t
+    @test x+y+z+t == @cse x+y+z+t
+end
