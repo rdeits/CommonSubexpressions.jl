@@ -4,6 +4,7 @@ os:
 julia:
   - 0.7
   - 1.0
+  - 1.4
   - nightly
 notifications:
   email: false
@@ -18,4 +19,4 @@ matrix:
  - julia: nightly
 
 after_success:
-  - julia -e 'cd(Pkg.dir("CommonSubexpressions")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
