@@ -38,6 +38,8 @@ const standard_expression_forms = Set{Symbol}(
      :for,
      :ref,
      :macrocall,
+     :vcat,
+     :row,
      Symbol("'")))
 
 const assignment_expression_forms = Set{Symbol}(
