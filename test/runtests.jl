@@ -226,7 +226,7 @@ module NestedMacroTest
         @test special_plus_calls[] == 2
 
         special_plus_calls[] = 0
-        @test(@cse(@special_math((1 + 2 + 3) + (1 + 2 + 4) + (1 + 2 + 5)), binarize=true) == 21)
+        @test(@cse(@binarize(@special_math((1 + 2 + 3) + (1 + 2 + 4) + (1 + 2 + 5)))) == 21)
         # Test that the duplicate calls to `1 + 2` were eliminated
         @test special_plus_calls[] == 6
     end
