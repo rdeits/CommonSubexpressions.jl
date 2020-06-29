@@ -1,7 +1,7 @@
 name = "CommonSubexpressions"
 uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
 authors = ["Robin Deits <robin.deits@gmail.com>"]
-version = "0.2.1"
+version = "0.3"
 
 [deps]
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
@@ -9,4 +9,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 MacroTools = "0.5"
-julia = "0.7, 1"
+julia = "1"
