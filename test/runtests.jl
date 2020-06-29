@@ -1,5 +1,6 @@
 using Test
 using CommonSubexpressions
+using CommonSubexpressions: binarize
 
 @testset "basic usage" begin
     f_count = 0
@@ -133,8 +134,11 @@ end
     @test expr.args[2].args[2].args[1] == :(*)
 end
 
-@testset "inplace" begin
+@testset "warnings" begin
+    @test_logs (:warn, "CommonSubexpressions can't yet handle expressions of this form: foo") cse(Expr(:foo, 1, 2, 3))
+end
 
+@testset "inplace" begin
     x = 1
     @cse begin
         y = 2 + x
@@ -142,4 +146,80 @@ end
     end
     @test y == 3
     @test x == 4
+end
+
+@testset "binarize" begin
+    @test binarize(:a) == :a
+    @test binarize(:(a)) == :(a)
+    @test binarize(:(+a)) == :(+a)
+    @test binarize(:(a + b)) == :(a + b)
+    @test binarize(:(a + b + c)) == :((a + b) + c)
+    @test binarize(:(a + b + c + d)) == :(((a + b) + c) + d)
+    @test binarize(:(a + b + c + d + e)) == :((((a + b) + c) + d) + e)
+
+    # Nested function calls
+    @test binarize(:((a + b + c) + (d + e + f))) == :(((a + b) + c) + ((d + e) + f))
+
+    # Arbirary binary functions should be left as-is
+    @test binarize(:(f(a + b, c))) == :(f(a + b, c))
+    @test binarize(:(f(a + b, g(c, d + e)))) == :(f(a + b, g(c, d + e)))
+
+    # Make sure we can binarize functions whose arguments are expressions
+    @test binarize(:(f(a + b, c + d, g(e, f)))) == :(f(f(a + b, c + d), g(e, f)))
+end
+
+# Test nesting `@cse` with a macro like `@fastmath`
+module NestedMacroTest
+    using CommonSubexpressions
+    using MacroTools: postwalk, @capture
+    using Test
+
+    const special_plus_calls = Ref(0)
+
+    function special_plus(args...)
+        special_plus_calls[] += 1
+        +(args...)
+    end
+
+    macro special_math(expr)
+        esc(postwalk(expr) do ex
+            if @capture(ex, +(x__))
+                :(special_plus($(x...)))
+            else
+                ex
+            end
+        end)
+    end
+
+    @testset "Nested Macros" begin
+        @test(@cse(@special_math(2 + 2)) == 4)
+        @test special_plus_calls[] == 1
+
+        special_plus_calls[] = 0
+        @test(@cse(@binarize(@special_math(1 + 2 + 3 + 4))) == 10)
+        # Three more calls to `special_plus`
+        @test special_plus_calls[] == 3
+
+        special_plus_calls[] = 0
+        # Test that CSE is actually eliminated common subexpressions even
+        # when nested with another macro.
+        @test(@cse(@special_math((1 + 2) + (3 + 4))) == 10)
+        # Three more calls: 1 + 2, 3 + 4, and 3 + 7
+        @test special_plus_calls[] == 3
+
+        special_plus_calls[] = 0
+        @test(@cse(@special_math((2 + 2) + (2 + 2))) == 8)
+        # Only two more calls because of CSE: 2 + 2, 4 + 4
+        @test special_plus_calls[] == 2
+
+        # These particular macros also commute:
+
+        special_plus_calls[] = 0
+        @test(@special_math(@cse((1 + 2) + (3 + 4))) == 10)
+        @test special_plus_calls[] == 3
+
+        special_plus_calls[] = 0
+        @test(@special_math(@cse((2 + 2) + (2 + 2))) == 8)
+        @test special_plus_calls[] == 2
+    end
 end
