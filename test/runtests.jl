@@ -136,6 +136,9 @@ end
 
 @testset "warnings" begin
     @test_logs (:warn, "CommonSubexpressions can't yet handle expressions of this form: foo") cse(Expr(:foo, 1, 2, 3))
+
+    @cse(1 + 2 + 3, false)
+    @cse(1 + 2 + 3, warn=true)
 end
 
 @testset "inplace" begin
@@ -221,5 +224,10 @@ module NestedMacroTest
         special_plus_calls[] = 0
         @test(@special_math(@cse((2 + 2) + (2 + 2))) == 8)
         @test special_plus_calls[] == 2
+
+        special_plus_calls[] = 0
+        @test(@cse(@special_math((1 + 2 + 3) + (1 + 2 + 4) + (1 + 2 + 5)), binarize=true) == 21)
+        # Test that the duplicate calls to `1 + 2` were eliminated
+        @test special_plus_calls[] == 6
     end
 end

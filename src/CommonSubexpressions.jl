@@ -1,6 +1,6 @@
 module CommonSubexpressions
 
-using MacroTools: @capture, postwalk
+using MacroTools: @capture, postwalk, MacroTools
 using Base.Iterators: drop
 
 export @cse, cse, @binarize
@@ -107,21 +107,48 @@ function combine_subexprs!(expr::Expr, warn_enabled::Bool)
     Expr(:block, cache.setup..., expr)
 end
 
+function parse_cse_args(args)
+    params = Dict(:warn => true, :binarize => false)
+    for (i, arg) in enumerate(args)
+        if @capture(arg, key_Symbol = val_Bool)
+            if key in keys(params)
+                params[key] = val
+            else
+                error("Unrecognized key: $key")
+            end
+        elseif i == 1 && arg isa Bool
+            Base.depwarn("The `warn_enabled` positional argument is deprecated. Please use `warn=true` or `warn=false` instead", :cse_kwargs)
+        else
+            error("Unrecognized argument: $arg. Expected `warn=<bool>` or `binarize=<bool>`")
+
+        end
+    end
+    params
+end
+
 """
-    @cse(expr, warn_enabled = true)
+    @cse(expr; warn=true, binarize=false)
 
 Perform naive common subexpression elimination under the assumption
 that all functions called withing the body of the macro are pure,
 meaning that they have no side effects. See [Readme.md](https://github.com/rdeits/CommonSubexpressions.jl/blob/master/Readme.md)
 for more details.
 
-If `warn_enabled == true`, then this macro will warn whenever it encounters
-an expression type that it does not know how to transform. Otherwise that
-expression will be silently left unmodified.
+This macro will not recursively expand macro calls within the resulting expression.
+
+If the macro encounters an expression which it does not know how to handle,
+it will return that expression unmodified. If `warn=true`, then it
+will also log a warning in that event.
+
+If `binarize=true` is given, then all n-ary expressions will be recursively
+converted into nested binary expressions. See `@binarize` for more information.
 """
-macro cse(expr, warn_enabled::Bool = true)
-    result = combine_subexprs!(expr, warn_enabled)
-    # println(result)
+macro cse(expr, args...)
+    params = parse_cse_args(args)
+    if params[:binarize]
+        expr = binarize(expr)
+    end
+    result = combine_subexprs!(expr, params[:warn])
     esc(result)
 end
 
