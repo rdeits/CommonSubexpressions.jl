@@ -87,7 +87,7 @@ function combine_subexprs!(cache::Cache, expr::Expr;
             for (i, child) in enumerate(expr.args)
                 expr.args[i] = combine_subexprs!(cache, child, warn=warn, mod=mod)
             end
-            if all(!isa(arg, Expr) && !(arg in cache.disqualified_symbols) for arg in drop(expr.args, 1))
+            if all(!isa(arg, Expr) && !(isa(arg, Symbol) && arg in cache.disqualified_symbols) for arg in drop(expr.args, 1))
                 combined_args = Symbol(expr.args...)
                 if !haskey(cache.args_to_symbol, combined_args)
                     sym = add_element!(cache, combined_args, expr)
